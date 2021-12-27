@@ -1,0 +1,12 @@
+The xx30 Series of Thinkpads unfortunately incorporate some kind of battery
+check that makes it impossible to use an aftermarket and/or xx20 series
+battery, even though i.e. T420 battery will perfectly fit into xx30 and
+also works.
+The reason is some kind of challenge/response battery authentication mechanism
+in the embedded controller. This was discovered by Dr. Matthew Chapman for his
+X230T Thinkpad and very well documented in his blog:
+https://zmatt.net/unlocking-my-lenovo-laptop-part-2/
+Unfortunately, the Thinkpad L430 and L530 series use a different embededd
+controller (Nuvoton NPCE885G), so this patch was written.
+This is a recommended patch.
+

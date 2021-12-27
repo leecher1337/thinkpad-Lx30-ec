@@ -1,0 +1,11 @@
+It is possible to connect a good old 7-row keyboard of the 420-series to a
+430-series machine. Many users prefer the old keyboard and its layout over
+the new 6-row keybard.
+You can find many articles on the Internet on how to swap out the keyboard.
+You may beed to isolate some PINs to not cause damage to they keyboard, but
+otherwise it's a pretty straightforward process.
+One problem with the 7-row keyboard is the fact that some keys are mapped
+incorrectly, i.e. Home, PgUp, PgDown, ...
+This patch patches the EC keyboard layout so that it fits to a 7-row 
+keyboard. It also enables NumLock feature.
+Only use, if you installed a 7-row keyboard!
