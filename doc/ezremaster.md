@@ -52,6 +52,6 @@ x86 build would use
 https://distro.ibiblio.org/tinycorelinux/11.x/x86/archive/11.1/Core-11.1.iso
 instead, but unfortunately, the kernel driver for hotpatching only works in
 x64 Linux properly, therefore, there are no x86 builds of the ISO.
-Who need sit anyway, as all affected machines are capable of 64bit.
+Who needs it anyway, as all affected machines are capable of 64bit.
 
-We also support UEFI booting og the ISO for your convenience.
+We also support UEFI booting of the ISO for your convenience.

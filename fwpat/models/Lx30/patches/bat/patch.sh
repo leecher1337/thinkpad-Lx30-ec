@@ -1,5 +1,5 @@
 #!/bin/bash
-. ../../util/util.sh
+. ../../../../util/util.sh
 
 # Patterns to patch
 patches() {

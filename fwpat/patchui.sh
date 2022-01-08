@@ -1,14 +1,33 @@
 #!/bin/bash
+
+# Global variables defining the EC image:
+cfg_offs_rom_code=$((0x8000))     # Offset of code that gets loaded at memory location 20100 in EC ROM image upon loading (as seen by the EC)
+cfg_addr_mem_code=$((0x20000))    # Memory location of code including header
+cfg_offs_mem_code=$((0x100))      # Offset of start of code in memory
+cfg_size_mem_code=$((0x20000))    # Size of code segment in memory
+
+realpath() { echo $(cd $(dirname $1); pwd)/$(basename $1); }
+
+loadcfg() {
+	# $1 Model
+	. models/$1/config.sh
+
+	# Start of code in RAM (as seen by the EC) -> 20100
+	addr_mem_code=$((cfg_addr_mem_code+cfg_offs_mem_code))
+
+	# Offset in firmware images to patch (Layout in SPI EEPROM relative to EC mem Layout, so: EC mem addr + offs_rom_mem_code = SPI EEPROM addr)
+	offs_rom_mem_code=$((cfg_offs_rom_ec+cfg_offs_rom_code-addr_mem_code))
+}
+
 chkfwver() {
 	# $1 = file to check
 	# $2 = offset to check
 
-	local wanted_ver="G3HT40WW(1.14)"
 	echo -n "Firmware version..."
 	local ver=`dd if=$1 bs=1 count=14 skip=$2 2>/dev/null`
-	if [ $ver != $wanted_ver ]; then
+	if [ $ver != $cfg_stri_fwver ]; then
 		echo Wrong firmware version $ver
-		dialog --msgbox "Your firmware version $ver does not match the required version $wanted_ver. Please install firmware $wanted_ver and try again" 0 0
+		dialog --msgbox "Your firmware version $ver does not match the required version $cfg_stri_fwver. Please install firmware $cfg_stri_fwver and try again" 0 0
 		return 1
 	fi
 	echo OK
@@ -25,18 +44,19 @@ chkutil() {
 }
 
 applypat() {
-	# $1 Patches
-	# $2 Offset
-	# $3 File to patch
+	# $1 Model
+	# $2 Patches
+	# $3 Offset
+	# $4 File to patch
 
-	for i in $1
+	for i in $2
 	do
-		if [ ! -e patches/$i/patch.sh ]; then
-			dialog --msgbox "patch directory patches/$i/patch.sh not found, is your patchset complete?" 0 0
+		if [ ! -e models/$1/patches/$i/patch.sh ]; then
+			dialog --msgbox "patch directory models/$1/patches/$i/patch.sh not found, is your patchset complete?" 0 0
 			return 1
 		fi
-		pushd patches/$i
-		bash patch.sh $2 $3
+		pushd models/$1/patches/$i >/dev/null
+		bash patch.sh $3 $4
 		if [ $? -ne 0 ]; then
 			echo "Applying patch $i failed, maybe wrong firmware image? Aborting for your safety"
 			echo "Press RETURN to continue"
@@ -44,13 +64,14 @@ applypat() {
 			popd
 			return 1
 		fi
-		popd
+		popd >/dev/null
 	done
 	return 0
 }
 
 hot() {
-	# $1 = patches to apply
+	# $1 Model
+	# $2 Patches to apply
 	clear
 
 	echo Checking prereqisites...
@@ -85,15 +106,17 @@ hot() {
 		return 1
 	fi
 
-	chkfwver /sys/kernel/debug/ec/ec0/ram $((0x20060)) || return
+	chkfwver /sys/kernel/debug/ec/ec0/ram $cfg_offs_mem_fwver || return
 
-	applypat "$1" 0 /sys/kernel/debug/ec/ec0/ram || return
+	applypat $1 "$2" 0 /sys/kernel/debug/ec/ec0/ram || return
 
 	dialog --msgbox "Patch(es) applied." 0 0
 	return 0
 }
 
 fw() {
+	# $1 Model
+	# $2 Patches to apply
 	chkutil flashrom
 	if [ ! -e layout ]; then
 		dialog --msgbox "layout file missing, is your patchset complete?" 0 0
@@ -103,21 +126,21 @@ fw() {
 	clear
 	echo "Now Dumping your current firmware..."
 	rm /tmp/current-bios.bin 2>/dev/null
-	flashrom -p internal -l layout -r /tmp/current-bios.bin -i ec
+	flashrom -p internal -l models/$1/layout -r /tmp/current-bios.bin -i ec
 	if [ $? -ne 0 ]; then
 		echo "Flashrom failed dumping the image. Please take note of the output and "
 		echo "press RETURN to exit"
 		read
 		return 1
 	fi
-	chkfwver /tmp/current-bios.bin $((0x400060)) || return
+	chkfwver /tmp/current-bios.bin $((offs_rom_mem_code+cfg_offs_mem_fwver)) || return
 
-	applypat "$1" $((0x3e7f00)) /tmp/current-bios.bin || return
+	applypat $1 "$2" $offs_rom_mem_code /tmp/current-bios.bin || return
 
 	dialog --yesno "EC ROM prepared. Are you sure that you want to flash it back to ROM now?" 0 0 || return
 
 	clear
-	flashrom -p internal -l layout -w /tmp/current-bios.bin -i ec
+	flashrom -p internal -l models/$1/layout -w /tmp/current-bios.bin -i ec
 	local ret=$?
 	echo "Please check output of flashrom and press RETURN to quit"
 	read
@@ -128,27 +151,31 @@ fw() {
 
 # Patch original BIOS FL1 files
 fl1() {
-	# $1 Patches
-	# $2 FL1 File to patch
-	chkfwver "$2" $((0x00400230)) || return
+	# $1 Model
+	# $2 Patches
+	# $3 FL1 File to patch
+	loadcfg "$1"
+	chkfwver "$3" $((offs_rom_mem_code+cfg_offs_img_rom+cfg_offs_mem_fwver)) || return
 
-	applypat "$1" $((0x004001d0+0x8000-0x20100)) "$2" || return
+	applypat "$1" "$2" $((offs_rom_mem_code+cfg_offs_img_rom)) "$3" || return
 }
 
 # Create Patchset for thinkpad-ec
 hexpatchset()
 {
-	# $1 Patches
-	# $2 FL1 File containing BIOS
-	# $3 Target dir
-	local bn=`basename $2`
-	dd if=$2 of=/tmp/$bn.img bs=1 count=$((0x20000)) skip=$((0x004001d0))
-	chkfwver /tmp/$bn.img $((0x60)) || return
+	# $1 Model
+	# $2 Patches
+	# $3 FL1 File containing BIOS
+	# $4 Target dir
+	loadcfg $1
+	local bn=`basename $3`
+	dd if=$3 of=/tmp/$bn.img bs=1 count=$cfg_size_mem_code skip=$((cfg_offs_rom_ec+cfg_offs_img_rom))
+	chkfwver /tmp/$bn.img $((cfg_offs_rom_code-addr_mem_code+cfg_offs_mem_fwver)) || return
 	hexdump -C /tmp/$bn.img >/tmp/$bn.hex
-	for i in $1
+	for i in $2
 	do
 		cp -f /tmp/$bn.img /tmp/$bn.$i
-		applypat "$i" $((0x8000-0x20100)) /tmp/$bn.$i
+		applypat $1 "$i" $((cfg_offs_rom_code-addr_mem_code)) /tmp/$bn.$i
 		hexdump -C /tmp/$bn.$i >/tmp/$bn.$i.hex
 		case $i in
 			kb)
@@ -174,12 +201,12 @@ thinkpadec() {
 	# $1 thinkpad_ec directory
 
 	local img=g3uj25us
-	pushd $1
+	pushd $1 >/dev/null
 	make $img.iso.orig
 	make $img.iso.orig.extract
-	popd
+	popd >/dev/null
 	mkdir $1/l430.G3HT40WW.img.d/ 2>/dev/null
-	hexpatchset "kb bat" $1/$img.iso.orig.extract/FLASH/*/\$01D4000.FL1 $1/l430.G3HT40WW.img.d/
+	hexpatchset Lx30 "kb bat" $1/$img.iso.orig.extract/FLASH/*/\$01D4000.FL1 $1/l430.G3HT40WW.img.d/
 	for i in 002_dead_keys.patch 003_keysym_replacements.patch 004_fn_keys.patch 005_fn_key_swap.patch
 	do
 		touch $1/l430.G3HT40WW.img.d/$i
@@ -189,6 +216,8 @@ thinkpadec() {
 
 
 patchtype() {
+	# $1 model
+	# $2 patches
 	while : ; do
 		method=`dialog --help-button --menu "How to patch?" 0 0 0 \
 			hot "Hotpatch in memory only" \
@@ -224,19 +253,20 @@ complain!" 0 0
 			return 1
 			;;
 		0)
-			$method "$1"
+			$method $1 "$2"
 			return $?
 			;;
 		esac
 	done
 }
 
-mainmenu() {
+patchmenu() {
+	# $1 Model
+	declare -a args=()
+	if [ -e models/$1/patches/kb ]; then args+=(kb "Classic 7-row keyboard keymap" off); fi
+	if [ -e models/$1/patches/bat ]; then args+=(bat "Disable check for genuine battery" on); fi
 	while : ; do
-		patches=`dialog --help-button --checklist "EC patches to apply" 0 0 2 \
-			kb "Classic 7-row keyboard keymap" off\
-			bat "Disable check for genuine battery" on \
-			3>&1 1>&2 2>&3`
+		patches=`dialog --help-button --checklist "EC patches to apply" 0 0 0 "${args[@]}" 3>&1 1>&2 2>&3`
 		case $? in
 		2)
 			local tok=($patches)
@@ -249,9 +279,28 @@ mainmenu() {
 			if [ -z "$patches" ]; then
 				dialog --msgbox "Please select at least one patch to apply" 0 0
 			else
-				patchtype "$patches"
+				patchtype $1 "$patches"
 				if [ $? -eq 0 ]; then break; fi
 			fi
+			;;
+		esac
+	done
+}
+
+mainmenu() {
+	while : ; do
+		model=`dialog --menu "Which Thinkpad model to patch?" 0 0 0 \
+			Lx30 "Thinkpad L430/L530" \
+			B590 "Thinkpad B590" \
+			E330 "Thinkpad E330" \
+			3>&1 1>&2 2>&3`
+		case $? in
+		1)
+			break
+			;;
+		0)
+			loadcfg $model
+			patchmenu $model
 			;;
 		esac
 	done
@@ -274,16 +323,23 @@ if [ -z $1 ]; then
 	echo exitcheck.sh
 	echo
 else
-	if [ $1 = thinkpadec ] && [ ! -z $2 ]; then
-		thinkpadec $2
-	else
-		echo $0 \[thinkpadec\ \<dir\>]
-		echo
-		echo Without arguments, calls interactive menu for live patching
-		echo thinkpadec \<dir\>  - Create patchset for thinkpad_ec which is intalled in \<dir\>
-		echo
-		exit 1
+	if [ $1 = fl1 ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$4" ]; then
+		fl1 "$2" "$3" `realpath "$4"`
+		exit $?
 	fi
+	if [ $1 = thinkpadec ] && [ ! -z "$2" ]; then
+		thinkpadec "$2"
+		exit 0
+	fi
+	echo $0 \[thinkpadec\ \<dir\>] \[fl1 \<model\> \<patches\> \<file\>\]
+	echo
+	echo Without arguments, calls interactive menu for live patching
+	echo "thinkpadec - Create Lx30 patchset for thinkpad_ec which is installed in \<dir\>"
+	echo "fl1        - Patches FL1 \<file\> with \<patches\> for \<model\>"
+	echo "             i.e.: $0 Lx30 \"kb bat\" \$01D4000.FL1"
+	echo 
+	echo
+	exit 1
 fi
 
 exit 0
