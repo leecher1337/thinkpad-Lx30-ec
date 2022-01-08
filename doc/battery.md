@@ -149,7 +149,7 @@ So the offset to add to the addresses above is `3e7f00` when patching firmware i
 ## Bonus: Table for Thinkpad B590 BIOS 
 
 The B590 BIOS is similar to the one of Lx30, so here is the table for B590 
-BIOS, EC version ML0W.H9, which i.e. is included in BIOS H9ET92WW (untested!):
+BIOS, EC version H9EC09WW(1.02), which i.e. is included in BIOS H9ET92WW (untested!):
 
 | Address | Old instruction         | Old instr. bytes | New instr.              | New instr. bytes | State | Comment                                            |
 | ------- | ----------------------- | ---------------- | ----------------------- | ---------------- | ----- | ---------------------------------------------------|
@@ -164,7 +164,7 @@ BIOS, EC version ML0W.H9, which i.e. is included in BIOS H9ET92WW (untested!):
 ## Bonus: Table for Thinkpad E330 BIOS 
 
 The E330 BIOS is similar to the one of Lx30, so here is the table for E330 (Lenovo V480s) 
-BIOS, EC version ML0W.H3, which i.e. is included in BIOS H3UJ79WW (untested!).
+BIOS, EC version H3EC35WW(1.18), which i.e. is included in BIOS H3UJ79WW (untested!).
 Please note that EC region in FL1 or FL2 starts at 800000, not 400000.
 
 | Address | Old instruction         | Old instr. bytes | New instr.              | New instr. bytes | State | Comment                                            |
