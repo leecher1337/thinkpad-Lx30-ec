@@ -8,7 +8,7 @@ to make the classic 7-row keyboards work.  There are also patches included
 to disable the authentic battery validation check.
 
 There are already patches for other xx30 series Thinkpads to acoomplish
-this [here](https://raw.githubusercontent.com/hamishcoleman/thinkpad-ec/), 
+this [here](https://www.github.com/hamishcoleman/thinkpad-ec/), 
 but they are for different embedded controllers, so this patchset had to
 be created.
 
@@ -79,7 +79,14 @@ BIOS to a compatible version before starting.
 It is not so much a question about upgrading to a recent BIOS version, but
 more of ensuring you are using a compatible EC firmware version. 
 
-These patches are only compatibles with EC version G3HT40WW(1.14)
+Firmware compatibility Matrix:
+
+Laptop    | EC version 
+----------|---------------
+L430/L530 | G3HT40WW(1.14)
+B590      | H9EC09WW(1.02)
+E330      | H3EC35WW(1.18)
+
 If unsure, you can check i.e. in BIOS.
 
 Now check out Releases-Link on the right side of this page. It contains ready

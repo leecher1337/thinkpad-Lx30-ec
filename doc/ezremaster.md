@@ -24,9 +24,11 @@ exit
 
 ```
 cd ~
-wget https://github.com/leecher1337/thinkpad-Lx30-ec/archive/refs/heads/master.zip
-unzip master.zip
-rm master.zip
+wget https://github.com/leecher1337/thinkpad-Lx30-ec/archive/refs/heads/main.zip
+unzip main.zip
+mv thinkpad-Lx30-ec-main/* .
+rmdir thinkpad-Lx30-ec-main
+rm main.zip
 ```
 
 5) Now download Tinycore ISO required for building:
