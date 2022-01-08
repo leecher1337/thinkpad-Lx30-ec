@@ -158,7 +158,23 @@ BIOS, EC version ML0W.H9, which i.e. is included in BIOS H9ET92WW (untested!):
 | 28b7c   | BRfs 00028ebe           | 80 18 42 03      | BR 00028bfa             | e0 18 7e 00      | 12    | Always execute step and do not go back to state 2  |
 | 28c12   | TBITB $0x06,\*0x1(R3R2) | 62 7b 01 00      | SBITB $0x06,\*0x1(R3R2) | 62 73 01 00      | 12    | Set battery authenticated bit                      |
 |         | BRfc 00028c1e           | 94 10            | SBITB $0x05,\*0x1(R3R2) | 52 73 01 00      | 12    | Set battery charging enable bit                    |
-|         |                         |                  | BR \*0x28c1e            | e0 18 04 00      | 12    | Now go on to code where both bits were enabled     |
+|         |                         |                  | NOP NOP                 | 00 2c 00 2c      | 12    | Now go on to code where both bits were enabled     |
+
+
+## Bonus: Table for Thinkpad E330 BIOS 
+
+The E330 BIOS is similar to the one of Lx30, so here is the table for E330 (Lenovo V480s) 
+BIOS, EC version ML0W.H3, which i.e. is included in BIOS H3UJ79WW (untested!).
+Please note that EC region in FL1 or FL2 starts at 800000, not 400000.
+
+| Address | Old instruction         | Old instr. bytes | New instr.              | New instr. bytes | State | Comment                                            |
+| ------- | ----------------------- | ---------------- | ----------------------- | ---------------- | ----- | ---------------------------------------------------|
+| 2886c   | BReq 00028d26           | 00 18 ba 04      | BR \*0x000288c0         | e0 18 54 00      | 2     | Do not send battery auth challenge                 |
+| 288d8   | ORW 0x03, R0            | 30 26            | ORW 0x0C, R0            | c0 26            | 2     | Skip directly to state 12                          |
+| 28a62   | BRfs 00028d26           | 80 18 c4 02      | NOP NOP                 | 00 2c 00 2c      | 12    | Always execute step and do not go back to state 2  |
+| 28a7a   | TBITB $0x06,\*0x1(R3R2) | 62 7b 01 00      | SBITB $0x06,\*0x1(R3R2) | 62 73 01 00      | 12    | Set battery authenticated bit                      |
+|         | BRfc 00028a86           | 94 10            | SBITB $0x05,\*0x1(R3R2) | 52 73 01 00      | 12    | Set battery charging enable bit                    |
+|         |                         |                  | NOP NOP                 | 00 2c 00 2c      | 12    | Now go on to code where both bits were enabled     |
 
 
 ## Patching the authentication routine
