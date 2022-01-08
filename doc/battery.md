@@ -115,7 +115,7 @@ Judging from the states above, we want to
 
 - Go to state 12 in byte 1 (0x0C)
 - Have bit 5 and 6 enabled in byte 2 (0x60).
-- Ensure that state 12 runs, so bit 0 cleard in byte 3, but keep BIOS date/time set enabled (0x02)
+- Ensure that state 12 runs, so bit 0 cleared in byte 3, but keep BIOS date/time set enabled (0x02)
 
 So we can simply write these bytes to the state machine field and have
 a temporary patch for an inserted battery.
@@ -128,9 +128,9 @@ So the following patch should be enough:
 
 | Address | Old instruction         | Old instr. bytes | New instr.              | New instr. bytes | State | Comment                                                                 |
 | ------- | ----------------------- | ---------------- | ----------------------- | ---------------- | ----- | ----------------------------------------------------------------------- |
-| 28a72   | BReq 0002915e           | 00 18 ec 06      | BR \*0x00028ac6         | e0 18 54 00      | 2     | Do net send battery auth challenge                                      |
+| 28a72   | BReq 0002915e           | 00 18 ec 06      | BR \*0x00028ac6         | e0 18 54 00      | 2     | Do not send battery auth challenge                                      |
 | 28ade   | ORW 0x03, R0            | 30 26            | ORW 0x0C, R0            | c0 26            | 2     | Skip directly to state 12                                               |
-| 28c68   | BRfs 0002915            | 80 18 f6 04      | BR 00028cc2             | e0 18 5a 00      | 12    | Always execute step (ignore byte 3 bit 0) and do not go back to state 6 |
+| 28c68   | BRfs 0002915e           | 80 18 f6 04      | BR 00028cc2             | e0 18 5a 00      | 12    | Always execute step (ignore byte 3 bit 0) and do not go back to state 6 |
 | 28cea   | TBITB $0x06,\*0x1(R1R0) | 60 7b 01 00      | SBITB $0x06,\*0x1(R1R0) | 60 73 01 00      | 12    | Set battery authenticated bit                                           |
 |         | BRfc 00028d26           | 9c 11            | SBITB $0x05,\*0x1(R1R0) | 50 73 01 00      | 12    | Set battery charging enable bit                                         |
 |         |                         |                  | BR \*0x28d1e            | e0 18 2c 00      | 12    | Now go on to code where both bits were enabled                          |
@@ -145,6 +145,21 @@ address in firmware image, use the following calculation:
 | -   | 20100  | Memory location of code                                  |
 
 So the offset to add to the addresses above is `3e7f00` when patching firmware images.
+
+## Bonus: Table for Thinkpad B590 BIOS 
+
+The B590 BIOS is similar to the one of Lx30, so here is the table for B590 
+BIOS, EC version ML0W.H9, which i.e. is included in BIOS H9ET92WW (untested!):
+
+| Address | Old instruction         | Old instr. bytes | New instr.              | New instr. bytes | State | Comment                                            |
+| ------- | ----------------------- | ---------------- | ----------------------- | ---------------- | ----- | ---------------------------------------------------|
+| 28986   | BReq 00028ebe           | 00 18 38 05      | BR \*0x000289da         | e0 18 54 00      | 2     | Do not send battery auth challenge                 |
+| 289f2   | ORW 0x03, R0            | 30 26            | ORW 0x0C, R0            | c0 26            | 2     | Skip directly to state 12                          |
+| 28b7c   | BRfs 00028ebe           | 80 18 42 03      | BR 00028bfa             | e0 18 7e 00      | 12    | Always execute step and do not go back to state 2  |
+| 28c12   | TBITB $0x06,\*0x1(R3R2) | 62 7b 01 00      | SBITB $0x06,\*0x1(R3R2) | 62 73 01 00      | 12    | Set battery authenticated bit                      |
+|         | BRfc 00028c1e           | 94 10            | SBITB $0x05,\*0x1(R3R2) | 52 73 01 00      | 12    | Set battery charging enable bit                    |
+|         |                         |                  | BR \*0x28c1e            | e0 18 04 00      | 12    | Now go on to code where both bits were enabled     |
+
 
 ## Patching the authentication routine
 
