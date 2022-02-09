@@ -7,7 +7,7 @@ The main purpose of this software is to patch the EC on Lx30/B590/E330 series th
 to make the classic 7-row keyboards work.  There are also patches included 
 to disable the authentic battery validation check.
 
-There are already patches for other xx30 series Thinkpads to acoomplish
+There are already patches for other xx30 series Thinkpads to accomplish
 this [here](https://www.github.com/hamishcoleman/thinkpad-ec/), 
 but they are for different embedded controllers, so this patchset had to
 be created.
@@ -55,7 +55,7 @@ The EC firmware was reverse engineered using [Ghidra](https://ghidra-sre.org/)
 In ghidra/ dir, you find the current project file containing some
 annotations on various fields of the firmware.
 The file is mainly used to explore firmware and contains various components.
-These are explained in [doc/ghidra.md](doc/ghidra.md)
+These and the Header and CRC mechanism are explained in [doc/ghidra.md](doc/ghidra.md)
 
 The battery patch is explained in [doc/battery.md](doc/battery.md)
 The keyboard layout patch including all necessary tables to enroll your own 
@@ -93,6 +93,8 @@ Now check out Releases-Link on the right side of this page. It contains ready
 made ISOs that you just need to boot on the target machine and then
 apply the patches.
 Currently only hot-patching is available.
+For permanent patches (which got created by these scripts) refer to my pull
+request to [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/).
 
 To write the ISO image, you can either use a CD with a CD-Burner, or
 you simply put it on a USB stick. There are various tutorials and programs
@@ -124,12 +126,10 @@ so you have to redo it after every power outage
 
 ### Patch and reflash firmware
 
-DO NOT USE! It fails for LENOVO stock BIOS, unfortunately. 
 You would theoretically need to unlock flash chip first with  [1vyrain](https://github.com/n4ru/1vyrain), 
 but I didn't want to incorporate it within the bootable ISO, as chipsec is 
-pretty big and it has not been tested yet! Testing with DOSFLASH from Lenovo currently failed,
-so permanent flashing has to be investigated further.
-
+pretty big and it has not been tested yet! 
+So better use [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/) for that.
 
 Advantage:
 Survives even power-off and battery removal, so loads again on EC-reinitialization.
@@ -144,4 +144,123 @@ complain!
 
 After you select the appropriate option, patching should be carried out
 and you either get a success-message or an error.
+
+External flashing with a programmer:
+------------------------------------
+
+If internal flashing failed for you for whatever reason, you can try to flash 
+the chip with a Raspberry Pi and a Chip clip via ICP (In circuit programming).
+In my tests, flashing a L530 with a CH341A device didn't work, maybe due to 
+lacking power supply, but using a Raspberry Pi worked.
+As a general warning regarding CH341A:
+Be aware that the CH341A is an improperly engineered device that outputs
+5V instead of 3.3V on the data lines without modification, so if you want to 
+play around with CH341A, be sure to first modify the circuit.
+
+
+### Chip location
+
+You can cut out a part from the chassis in order to access the chip without 
+having to disassemble the whole machine.
+Image of the chip's location: [See here](https://github.com/hamishcoleman/thinkpad-ec/issues/203#issuecomment-1001250064) 
+So this is behind the cover where you can i.e. also acess the hard drive. 
+There is a rectangle cut out where you can see through the board and there 
+you can cut out the lower part in order to get access to the chip. 
+Be careful not to cut into the board!
+
+### Wiring
+
+Pin Chip | Name     | Pin RaspPi
+---------|----------|------------
+1        | CS       | 24
+2        | MISO     | 21
+3        | WP       | not used
+4        | GND      | 25
+5        | MOSI     | 19
+6        | CLK      | 23
+7        | HOLD     | not used
+8        | VCC 3.3v | 17
+
+WP and HOLD are not connected, because according to the board schematics, they
+are already connected to VCC via pull-up resistor onboard.
+
+## Chip layout:
+```
+         _____
+CS#  1--|o    |--8 VCC
+MISO 2--|     |--7 HOLD#
+WP#  3--|     |--6 CLK 
+GND  4--|_____|--5 MOSI 
+
+```
+
+## RaspPi PIN layout:
+
+See [here](https://www.elektronik-kompendium.de/sites/raspberry-pi/1907101.htm)
+Or just enter `pinout` on RaspPi shell to see it.
+
+
+Before setting up the cables, ensure that
+1) RaspPi is turned off
+2) Thinkpad is NOT connected to AC
+3) Thinkpad main battery is REMOVED
+
+It is crucial that there is no VCC on PIN8 of the Flash chip from the board,
+as circuit will be powered by the RaspPi!
+It's not necessary to remove the CMOS battery.
+
+When hooking up a chip clip from China, you usally have a ribbon cable and PIN 1
+is the red wire. PIN 1 has to match the upper left corner of the chip which
+is signified by a hole on the chip.
+
+
+### Setting up Raspberry PI
+
+[Enable SPI device](https://www.raspberrypi-spy.co.uk/2014/08/enabling-the-spi-interface-on-the-raspberry-pi/)
+if not done yet, by using `sudo raspi-config` and Interfacing options -> SPI
+
+Then install flashrom:
+
+`apt install flashrom`
+
+### Flashing
+
+1) Take layout file depending on your notebook model. 
+   Layout files are in [fwpat/models](fwpat/models) directory
+
+2) As a precation, you can dump your BIOS with:
+
+   `flashrom -p linux_spi:dev=/dev/spidev0.0,spispeed=1000 -r bios-ec.rom`
+   
+Sample output:
+```  
+flashrom v1.2 on Linux 5.10.63-v7l+ (armv7l)
+flashrom is free software, get the source code at https://flashrom.org
+
+Using region: "ec".
+Using clock_gettime for delay loops (clk_id: 1, resolution: 1ns).
+Found Winbond flash chip "W25Q64.V" (8192 kB, SPI) on linux_spi.
+Reading flash... done.
+```
+
+3) Dump it a second time, just to be sure and compare using `diff` utility to 
+   ensure proper dumping.
+
+4) For modification of the dumped ROM, refer to the appropriate document in [doc](doc/).
+   For the commands, instead of `-p internal`, use 
+   `-p linux_spi:dev=/dev/spidev0.0,spispeed=1000`
+   
+Sample output:
+```
+pi@raspberrypi:~ $  flashrom -p linux_spi:dev=/dev/spidev0.0,spispeed=1000 -l layout -w bios-new.rom -i ec
+flashrom v1.2 on Linux 5.10.63-v7l+ (armv7l)
+flashrom is free software, get the source code at https://flashrom.org
+
+Using region: "ec".
+Using clock_gettime for delay loops (clk_id: 1, resolution: 1ns).
+Found Winbond flash chip "W25Q64.V" (8192 kB, SPI) on linux_spi.
+Reading old flash chip contents... done.
+Erasing and writing flash chip... Erase/write done.
+Verifying flash... VERIFIED.
+```
 

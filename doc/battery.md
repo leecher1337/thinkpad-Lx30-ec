@@ -180,7 +180,7 @@ Please note that EC region in FL1 or FL2 starts at 800000, not 400000.
 ## Patching the authentication routine
 
 You MUST ensure that you have the correct EC firmware version in use!!
-Firmware version must be: G3HT40WW(1.14)
+Firmware version must be: G3HT40WW(1.14) for Lx30 or respective version for other BIOSses (see above)
 If unsure, you can check i.e. in BIOS.
 
 ### Hotpatch memory at runtime
@@ -205,7 +205,13 @@ modprobe x2100_ec_sys write_support=1
 ```
 
 3. Ensure that battery is already inserted.
-4. `echo -ne "\x0c\x60\x02" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x1004a]`
+4. According to model, run the respective command:
+
+| Model      | Command
+|------------|-----------------------------------------------------------
+| B590, E330 | `echo -ne "\x0c\x60\x02" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x10082]`
+| Lx30       | `echo -ne "\x0c\x60\x02" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x1004a]`
+       
 
 Now battery should become ready and if not full start to charge.
 
@@ -222,26 +228,17 @@ It only lasts as long as there is enough power so the EC doesn't shut down
 How to patch:
 
 1. Compile [x2100-ec-sys](https://github.com/exander77/x2100-ec-sys) kernel module
-2. If already installed, remove kernel module and reload it with write support:
+2. Load module with write support
 
-```
-rmmod x2100-ec-sys
-modprobe x2100_ec_sys write_support=1
-```
+If module already loaded: `echo Y>/sys/module/x2100_ec_sys/parameters/write_support`
+If module not loaded: `modprobe x2100_ec_sys write_support=1`
 
 3. Patch the code from down to up so that it doesn't accidentally get jumped to
-   while you are still patching, if it is still active during patching:
-
-```
-echo -ne "\x60\x73\x01\x00\x50\x73\x01\x00\xe0\x18\x2c\x00" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$((0x28cea))
-echo -ne "\xe0\x18\x5a\x00" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$((0x28c68))
-echo -ne "\xc0" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$((0x28ade))
-echo -ne "\xe0\x18\x54\x00" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$((0x28a72))
-```
-
-4. If a battery is already inserted, kick off that state machine to rerun:
-
-`echo -ne "\x02" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$((0x1004a))`
+   while you are still patching, if it is still active during patching.
+   The code for patching the respective machine can be found in the patches 
+   subdirectory in [fwpat/models](fwpat/models) in the patch.sh file.
+   You can run it directly with `./patch.sh 0 /sys/kernel/debug/ec/ec0/ram`, but
+   it is recommended to use the menu driven `patchui.sh`.
 
 Now battery should become ready and if not full start to charge.
 Swapping the battery also works.
@@ -256,61 +253,55 @@ You have to re-flash your EC firmware. If something goes wrong, you may end up
 with a BRICKED MACHINE! Do this at your own risk. If something goes wrong, do not
 complain!
 
-DO NOT USE, PERMANENT FLASHING HASN'T BEEN TESTED YET!
-This is just how it should work in theory. YOU HAVE BEEN WARNED!
+This is just how it should work in theory. 
+The problem is that the internal flash memory is locked. 
+Therefore, you either have to use [1vyrain](https://github.com/n4ru/1vyrain) to
+unlock, in order to be able to flash to the internal memory, or just use the 
+IBM flash tool by using [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/).
 
-1. Flash most recent stock firmware with EC Firmware version G3HT40WW(1.14)
+1. Flash most recent stock firmware with required EC Firmware version
    so that you are at the current Firmware level and verify that stock FW works
    and is OK.
    Also ensure that you have a backup of your current BIOS.
 
-2. Create file named `layout` with the following contents:
+2. Take layout file depending on your notebook model. 
+   Layout files are in [fwpat/models](fwpat/models) directory
 
-```
-00000000:00000fff fd
-00400000:007fffff bios
-00400000:0041ffff ec
-00001000:003fffff me
-```
+   Then read ec firmware with:
 
-Then read ec firmware with:
+   `flashrom -p internal -l layout -r current-bios.bin -i ec`
 
-`flashrom -p internal -l layout -r current-bios.bin -i ec`
+3. Backup current-bios.bin somewhere safe, just in case you need it later.
 
-3. Check BIOS image to verify that we are patching the correct region
+   `cp current-bios.bin current-bios.bak`
 
-`dd if=current-bios.bin bs=1 count=16 skip=$((0x3e7f00+0x28cea)) 2>/dev/null | hexdump -C`
+4. Apply patches to image and checksum it using the [fwpat](fwpat/) script and 
+   verify that there are no errors. 
+   Use the correct model number for your Notebook model. See subdirectories of 
+   [fwpat/models](fwpat/models) directory to see the possible values.
+   Available patches can be found in the patches-Subdirectory of the respecive
+   model in the models directory. 
+   bat = Battery patch 
+   
+   Syntax is: `patchdump <model> <patches> <file>`
+   
+   Example: `./patchui.sh patchdump Lx30 "bat" current-bios.bin`
 
-This should result in the following original code:
-
-`60 7b 01 00 9c 11 72 5d 22 5f 20 55 20 4c 20 61 |`{....r]"\_ U L a|
-`
-
-4. Backup current-bios.bin somewhere safe, just in case you need it later.
-
-5. Apply patches to image
-
-```
-echo -ne "\x60\x73\x01\x00\x50\x73\x01\x00\xe0\x18\x2c\x00" | dd conv=notrunc of=current-bios.bin bs=1 seek=$((0x3e7f00+0x28cea))
-echo -ne "\xe0\x18\x5a\x00" | dd conv=notrunc of=current-bios.bin bs=1 seek=$((0x3e7f00+0x28c68))
-echo -ne "\xc0" | dd conv=notrunc of=current-bios.bin bs=1 seek=$((0x3e7f00+0x28ade))
-echo -ne "\xe0\x18\x54\x00" | dd conv=notrunc of=current-bios.bin bs=1 seek=$((0x3e7f00+0x28a72))
-```
-
-6. Unlock BIOS using ivyrain
+5. Unlock BIOS using ivyrain
 
    First, you would need to apply the [1vyrain](https://github.com/n4ru/1vyrain) patches to 
    enable the flash chip. Refer to start.sh script of 1vyrain.iso to see how this works.
 
 
-7. Flash back BIOS to machine
+6. Flash back BIOS to machine
 
    `flashrom -p internal -l layout -w new-bios.bin -i ec`
 
-8. Power down machine, force reload of EC firmware by removing battery and AC power for 30 seconds
+7. Power down machine, force reload of EC firmware by removing battery and AC power for 30 seconds
 
 If it goes wrong, you need an external SPI flash programmer to recover.
-
+The CHA341A doesn't supply enough power for the circuit, but flashing with RaspPi on SPI bus
+and a chip clip works for ICP.
 
 
 Good luck!

@@ -1,6 +1,9 @@
 # Patching L430/530 for a classic 7-row Keyboard
 
 So I had a look at the Keyboard handling routines and found out where they keyboard layout table lies and how to edit it. The results are plenty tables that might become handy for you to patch your own keyboard layout.
+These patches are currently only tested on Lx30 Thinkpads, as I'm unsure if the classic 7-row keyboard can also be applied to B590 and E330.
+It would be trivial to adapt the EC firmware for these models too, so just drop me an e-mail if you verified that 7-row keyboard can be installed on these machines.
+Anyway, you can also use this information to modify the existing keyboard layout easily on all supported machines.
 
 ## Location of the keyboard table
 
@@ -506,7 +509,13 @@ You have to re-flash your EC firmware. If something goes wrong, you may end up
 with a bricked machine. Do this at your own risk. If something goes wrong, do not
 complain!
 
-How to patch:
+
+This is just how it should work in theory. 
+The problem is that the internal flash memory is locked. 
+Therefore, you either have to use [1vyrain](https://github.com/n4ru/1vyrain) to
+unlock, in order to be able to flash to the internal memory, or just use the 
+IBM flash tool by using [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-ec/).
+
 
 1) Flash most recent stock firmware with EC Firmware version G3HT40WW(1.14)
 so that you are at the current Firmware level and verify that stock FW works
@@ -526,8 +535,7 @@ Then read ec firmware with:
 
 3) Verify that you have the correct firmware and the original table in place:
 
-`dd if=/sys/kernel/debug/ec/ec0/ram bs=1 count=247 skip=$((0x3e7f00+0x366BD)) 2>/dev/null | hexdump -C`
-
+`dd if=current-bios.bin bs=1 count=247 skip=$((0x3e7f00+0x366BD)) 2>/dev/null | hexdump -C`
 
 3) Check BIOS image to verify that we are patching the correct region
 
@@ -543,11 +551,20 @@ and assign the WWW-Keys accordingly:
 `echo -ne "\x38\x01\x30\x01" | dd conv=notrunc of=current-bios.bin bs=1 seek=$((0x3e7f00+0x35f9e))`
 
 
-5) Flash back BIOS to machine
+5) Checksum new bios with [npce885crc](fwpat/util/npce885crc.c) utility from this repo:
+
+`npce885crc -o $((0x408000)) -u current-bios.bin`
+
+6) Unlock BIOS using ivyrain
+
+   First, you would need to apply the [1vyrain](https://github.com/n4ru/1vyrain) patches to 
+   enable the flash chip. Refer to start.sh script of 1vyrain.iso to see how this works.
+
+7) Flash back BIOS to machine
 
    `flashrom -p internal -l layout -w new-bios.bin -i ec`
 
-6) Power down machine, force reload of EC firmware by removing battery and AC power for 30 seconds
+8) Power down machine, force reload of EC firmware by removing battery and AC power for 30 seconds
 
 This has not been tested yet, but should work.
 

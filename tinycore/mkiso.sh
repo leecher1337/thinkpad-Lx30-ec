@@ -15,6 +15,7 @@ cp /home/tc/.profile $tpl_dir/home/tc/
 echo "cd /home/tc/fwpat" >>$tpl_dir/home/tc/.profile
 echo "sudo bash patchui.sh" >>$tpl_dir/home/tc/.profile
 cp $tools_dir/flashrom $tpl_dir/sbin/
+cp $tools_dir/npce885crc $tpl_dir/sbin/
 cp $tools_dir/x2100-ec-sys.ko $tpl_dir/lib/modules/$(uname -r)/kernel/drivers/acpi/
 curdir=$PWD
 cd $tpl_dir

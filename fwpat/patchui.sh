@@ -43,6 +43,21 @@ chkutil() {
 	return 0
 }
 
+cksum() {
+	# $1 Offset
+	# $2 File to patch
+
+	if ! command -v npce885crc &> /dev/null
+	then
+		# Not in global search path, maybe we can compile it from util/
+		gcc -o npce885crc util/npce885crc.c
+		export PATH=$PATH:$(pwd)
+		chkutil npce885crc || return 1
+	fi
+
+	npce885crc -o $(printf "0x%X" $1) -u $2
+}
+
 applypat() {
 	# $1 Model
 	# $2 Patches
@@ -114,6 +129,19 @@ hot() {
 	return 0
 }
 
+# Patches a firmware file on disk
+patfwfil() {
+	# $1 Model
+	# $2 Patches
+	# $3 File to patch
+	# $4 Offset in file
+	chkfwver "$3" $((offs_rom_mem_code+cfg_offs_mem_fwver+$4)) || return
+
+	applypat "$1" "$2" $((offs_rom_mem_code+$4)) "$3" || return
+	cksum $((cfg_offs_rom_ec+cfg_offs_rom_code+$4)) "$3" || return
+	return 0
+}
+
 fw() {
 	# $1 Model
 	# $2 Patches to apply
@@ -133,9 +161,8 @@ fw() {
 		read
 		return 1
 	fi
-	chkfwver /tmp/current-bios.bin $((offs_rom_mem_code+cfg_offs_mem_fwver)) || return
 
-	applypat $1 "$2" $offs_rom_mem_code /tmp/current-bios.bin || return
+	patfwfil "$1" "$2" /tmp/current-bios.bin 0 || return
 
 	dialog --yesno "EC ROM prepared. Are you sure that you want to flash it back to ROM now?" 0 0 || return
 
@@ -155,9 +182,16 @@ fl1() {
 	# $2 Patches
 	# $3 FL1 File to patch
 	loadcfg "$1"
-	chkfwver "$3" $((offs_rom_mem_code+cfg_offs_img_rom+cfg_offs_mem_fwver)) || return
+	patfwfil "$1" "$2" "$3" $cfg_offs_img_rom
+}
 
-	applypat "$1" "$2" $((offs_rom_mem_code+cfg_offs_img_rom)) "$3" || return
+# Patch BIOS dump file directly
+patchdump() {
+	# $1 Model
+	# $2 Patches
+	# $3 Dump File to patch
+	loadcfg "$1"
+	patfwfil "$1" "$2" "$3" 0
 }
 
 # Create Patchset for thinkpad-ec
@@ -323,20 +357,23 @@ if [ -z $1 ]; then
 	echo exitcheck.sh
 	echo
 else
-	if [ $1 = fl1 ] && [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$4" ]; then
-		fl1 "$2" "$3" `realpath "$4"`
-		exit $?
+	if [ $1 = fl1 ] || [ $1 = patchdump ]; then
+		if [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$4" ]; then
+			$1 "$2" "$3" `realpath "$4"`
+			exit $?
+		fi
 	fi
 	if [ $1 = thinkpadec ] && [ ! -z "$2" ]; then
 		thinkpadec "$2"
 		exit 0
 	fi
-	echo $0 \[thinkpadec\ \<dir\>] \[fl1 \<model\> \<patches\> \<file\>\]
+	echo $0 \[thinkpadec\ \<dir\>] \[\[fl1\|patchdump\] \<model\> \<patches\> \<file\>\]
 	echo
 	echo Without arguments, calls interactive menu for live patching
-	echo "thinkpadec - Create Lx30 patchset for thinkpad_ec which is installed in \<dir\>"
-	echo "fl1        - Patches FL1 \<file\> with \<patches\> for \<model\>"
-	echo "             i.e.: $0 Lx30 \"kb bat\" \$01D4000.FL1"
+	echo "thinkpadec - Create Lx30 patchset for thinkpad_ec which is installed in <dir>"
+	echo "fl1        - Patches FL1 <file> with <patches> for <model>"
+	echo "patchdump  - Patches BIOS dump <file> with <patches> for <model>"
+	echo "             i.e.: $0 fl1 Lx30 \"kb bat\" \$01D4000.FL1"
 	echo 
 	echo
 	exit 1

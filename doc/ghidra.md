@@ -27,11 +27,11 @@ and I added the 2 firmware images from the dump:
 | Offset | Ldr. Addr | Size     | Description                 | Comment                         |
 | ------ | --------- | -------- | --------------------------- | ------------------------------- |
 | 00     | 10330     | uint32_t | Signature                   | 49 4E 00 00                     |
-| 04     | 10334     | uint32_t | Start address in SPI Flash. | addr \* 2 - 0x80000             |
+| 04     | 10334     | uint32_t | Start address CRC in Flash  | addr \* 2 - 0x80000             |
 | 08     | 10338     | uint16_t | ?                           |
 | 0A     | 10324     | uint32_t | Size of code                | 0x3ad bytes of data follow code |
 | 0E     | 10328     | uint32_t | Address Entry point         | addr \* 2                       |
-| 12     | 1032C     | uint16_t | ?                           |
+| 12     | 1032C     | uint16_t | CRC                         | For algorithm see below         | 
 
 Example:
 
@@ -58,3 +58,19 @@ Offset      0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F
 | 12     | 0x9C     | 0x9C                               |
 | 14     | 04 00 0A | DI, CINV[i], MOVD ...              |
 
+# CRC calculation
+
+Take address at offset 04 (Start address CRC in Flash) and start with uint8_t CRC value 0.
+The start address is usually the start address of the IN header offset 0xA, so in the
+example above the address is 0x40800A, whereas the image gets loaded to address 0x408000.
+So we start at offset 0A.
+Then loop "Size of code" bytes (offset 0A) and subtract the value of every byte from 
+previous CRC result.
+
+In the example above, this would loop 0x168BB iterations starting from offset 0A, so:
+00 - 0E = F2
+F2 - 65 = 8D
+8D - 01 = 8C
+....
+
+You can find a simple implementation in src/npce885crc.c
