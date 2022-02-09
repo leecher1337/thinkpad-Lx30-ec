@@ -184,7 +184,7 @@ Pin Chip | Name     | Pin RaspPi
 WP and HOLD are not connected, because according to the board schematics, they
 are already connected to VCC via pull-up resistor onboard.
 
-## Chip layout:
+#### Chip layout:
 ```
          _____
 CS#  1--|o    |--8 VCC
@@ -194,7 +194,7 @@ GND  4--|_____|--5 MOSI
 
 ```
 
-## RaspPi PIN layout:
+#### RaspPi PIN layout:
 
 See [here](https://www.elektronik-kompendium.de/sites/raspberry-pi/1907101.htm)
 Or just enter `pinout` on RaspPi shell to see it.
