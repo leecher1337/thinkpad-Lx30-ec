@@ -551,7 +551,7 @@ and assign the WWW-Keys accordingly:
 `echo -ne "\x38\x01\x30\x01" | dd conv=notrunc of=current-bios.bin bs=1 seek=$((0x3e7f00+0x35f9e))`
 
 
-5) Checksum new bios with [npce885crc](fwpat/util/npce885crc.c) utility from this repo:
+5) Checksum new bios with [npce885crc](../fwpat/util/npce885crc.c) utility from this repo:
 
 `npce885crc -o $((0x408000)) -u current-bios.bin`
 

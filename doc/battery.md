@@ -236,7 +236,7 @@ If module not loaded: `modprobe x2100_ec_sys write_support=1`
 3. Patch the code from down to up so that it doesn't accidentally get jumped to
    while you are still patching, if it is still active during patching.
    The code for patching the respective machine can be found in the patches 
-   subdirectory in [fwpat/models](fwpat/models) in the patch.sh file.
+   subdirectory in [fwpat/models](../fwpat/models) in the patch.sh file.
    You can run it directly with `./patch.sh 0 /sys/kernel/debug/ec/ec0/ram`, but
    it is recommended to use the menu driven `patchui.sh`.
 
@@ -265,7 +265,7 @@ IBM flash tool by using [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-
    Also ensure that you have a backup of your current BIOS.
 
 2. Take layout file depending on your notebook model. 
-   Layout files are in [fwpat/models](fwpat/models) directory
+   Layout files are in [fwpat/models](../fwpat/models) directory
 
    Then read ec firmware with:
 
@@ -275,10 +275,10 @@ IBM flash tool by using [thinkpad-ec](https://github.com/hamishcoleman/thinkpad-
 
    `cp current-bios.bin current-bios.bak`
 
-4. Apply patches to image and checksum it using the [fwpat](fwpat/) script and 
+4. Apply patches to image and checksum it using the [fwpat](../fwpat/) script and 
    verify that there are no errors. 
    Use the correct model number for your Notebook model. See subdirectories of 
-   [fwpat/models](fwpat/models) directory to see the possible values.
+   [fwpat/models](../fwpat/models) directory to see the possible values.
    Available patches can be found in the patches-Subdirectory of the respecive
    model in the models directory. 
    bat = Battery patch 
