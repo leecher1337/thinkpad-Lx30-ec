@@ -222,7 +222,7 @@ hexpatchset()
 				fn=$bn.$i.patch
 				;;
 		esac
-		diff -Naur /tmp/$bn.hex /tmp/$bn.$i.hex >$3/$fn
+		diff -Naur /tmp/$bn.hex /tmp/$bn.$i.hex >$4/$fn
 		rm -f /tmp/$bn.$i.hex
 		rm -f /tmp/$bn.$i
 	done
@@ -230,22 +230,45 @@ hexpatchset()
 	rm -f /tmp/$bn.img
 }
 
+# Subfunction to create thinkpad_ec patch for specific machine
+tpecmkinit() {
+	# $1 thinkpad_ec directory
+	# $2 Image name to use
+	# $3 Patch directory
+	pushd $1 >/dev/null
+	make $2.iso.orig
+	make $2.iso.orig.extract
+	popd >/dev/null
+	mkdir $1/$3/ 2>/dev/null
+}
+
+# Subfunction to clean up extracted data for thinkpad_ec patch
+tpecmkdone() {
+	# $1 thinkpad_ec directory
+	# $2 Image name to use
+	# $3 Patch directory
+	for i in 001_keysym.patch 002_dead_keys.patch 003_keysym_replacements.patch 004_fn_keys.patch 005_fn_key_swap.patch
+	do
+		touch $1/$3/$i
+	done
+	rm -rf $1/$2.iso.orig.extract
+}
+
 # Creates a patch directory for thinkpad_ec project
 thinkpadec() {
 	# $1 thinkpad_ec directory
 
 	local img=g3uj25us
-	pushd $1 >/dev/null
-	make $img.iso.orig
-	make $img.iso.orig.extract
-	popd >/dev/null
-	mkdir $1/l430.G3HT40WW.img.d/ 2>/dev/null
-	hexpatchset Lx30 "kb bat" $1/$img.iso.orig.extract/FLASH/*/\$01D4000.FL1 $1/l430.G3HT40WW.img.d/
-	for i in 002_dead_keys.patch 003_keysym_replacements.patch 004_fn_keys.patch 005_fn_key_swap.patch
-	do
-		touch $1/l430.G3HT40WW.img.d/$i
-	done
-	rm -rf $1/$img.iso.orig.extract
+	local exdir=l430.G3HT40WW.img.d
+	tpecmkinit "$1" $img $exdir
+	hexpatchset Lx30 "kb bat" $1/$img.iso.orig.extract/FLASH/*/\$01D4000.FL1 $1/$exdir/
+	tpecmkdone "$1" $img $exdir
+
+	local img=h3uj79wd
+	local exdir=e330.H3EC35WW.img.d
+	tpecmkinit "$1" $img $exdir
+	hexpatchset E330 "bat" $1/$img.iso.orig.extract/H3ET79WW/\$01H3000.FL1 $1/$exdir/
+	tpecmkdone "$1" $img $exdir
 }
 
 
