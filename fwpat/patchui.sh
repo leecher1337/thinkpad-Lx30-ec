@@ -236,8 +236,8 @@ tpecmkinit() {
 	# $2 Image name to use
 	# $3 Patch directory
 	pushd $1 >/dev/null
-	make $2.iso.orig
-	make $2.iso.orig.extract
+	make $2.orig
+	make $2.orig.extract
 	popd >/dev/null
 	mkdir $1/$3/ 2>/dev/null
 }
@@ -251,23 +251,29 @@ tpecmkdone() {
 	do
 		touch $1/$3/$i
 	done
-	rm -rf $1/$2.iso.orig.extract
+	rm -rf $1/$2.orig.extract
 }
 
 # Creates a patch directory for thinkpad_ec project
 thinkpadec() {
 	# $1 thinkpad_ec directory
 
-	local img=g3uj25us
-	local exdir=l430.G3HT40WW.img.d
-	tpecmkinit "$1" $img $exdir
-	hexpatchset Lx30 "kb bat" $1/$img.iso.orig.extract/FLASH/*/\$01D4000.FL1 $1/$exdir/
-	tpecmkdone "$1" $img $exdir
+#	local img=g3uj25us.iso
+#	local exdir=l430.G3HT40WW.img.d
+#	tpecmkinit "$1" $img $exdir
+#	hexpatchset Lx30 "kb bat" $1/$img.orig.extract/FLASH/*/\$01D4000.FL1 $1/$exdir/
+#	tpecmkdone "$1" $img $exdir
 
-	local img=h3uj79wd
-	local exdir=e330.H3EC35WW.img.d
+#	local img=h3uj79wd.iso
+#	local exdir=e330.H3EC35WW.img.d
+#	tpecmkinit "$1" $img $exdir
+#	hexpatchset E330 "bat" $1/$img.orig.extract/H3ET79WW/\$01H3000.FL1 $1/$exdir/
+#	tpecmkdone "$1" $img $exdir
+
+	local img=h9et92ww.exe
+	local exdir=b590.H9ET92WW.img.d
 	tpecmkinit "$1" $img $exdir
-	hexpatchset E330 "bat" $1/$img.iso.orig.extract/H3ET79WW/\$01H3000.FL1 $1/$exdir/
+	hexpatchset B590 "bat" $1/$img.orig.extract/app/H9ET92WW.cap $1/$exdir/
 	tpecmkdone "$1" $img $exdir
 }
 
