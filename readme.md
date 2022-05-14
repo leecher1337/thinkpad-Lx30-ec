@@ -1,9 +1,9 @@
-# Thinkpad L430/L530/B590/E330 Embedded controller firmware patches
+# Thinkpad L430/L530/B480/B580/V480/V480c/V580/V580c/B490/B590/E330/V480s Embedded controller firmware patches
 
 Intro
 -----
 
-The main purpose of this software is to patch the EC on Lx30/B590/E330 series thinkpads
+The main purpose of this software is to patch the EC on above mentioned series thinkpads
 to make the classic 7-row keyboards work.  There are also patches included 
 to disable the authentic battery validation check.
 
@@ -19,8 +19,8 @@ The only keys that are not working are Fn+F3 (Battery) and Fn+F12 (Hibernate)
 * A full writeup of the hardware modifications needed can be found at:
     http://www.thinkwiki.org/wiki/Install_Classic_Keyboard_on_xx30_Series_ThinkPads
 
-About the EC on Lx30/B590/E330 series Thinkpads
------------------------------------------------
+About the EC on Lx30/Bx89/Vx80/Bx90/E330 series Thinkpads
+---------------------------------------------------------
 
 The EC is a Nuvoton [NPCE885G](http://j5d2v7d7.stackpathcdn.com/wp-content/uploads/2021/02/NPCE885LA0DX-datasheet.pdf) 
 (also according to [the schematics](http://laptop-schematics.com/view/8924/) ).
@@ -81,11 +81,12 @@ more of ensuring you are using a compatible EC firmware version.
 
 Firmware compatibility Matrix:
 
-Laptop    | EC version 
-----------|---------------
-L430/L530 | G3HT40WW(1.14)
-B590      | H9EC09WW(1.02)
-E330      | H3EC35WW(1.18)
+Laptop                          | EC version 
+--------------------------------|---------------------------------
+L430/L530                       | G3HT40WW(1.14)
+B480/B580/V480/V480c/V580/V580c | H1EC33WW(1.13) / H5EC33WW(1.13)
+B490/B590                       | H9EC09WW(1.02)
+E330/V480s                      | H3EC35WW(1.18)
 
 If unsure, you can check i.e. in BIOS.
 

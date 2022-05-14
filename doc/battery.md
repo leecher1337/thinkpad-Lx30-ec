@@ -146,7 +146,7 @@ address in firmware image, use the following calculation:
 
 So the offset to add to the addresses above is `3e7f00` when patching firmware images.
 
-## Bonus: Table for Thinkpad B590 BIOS 
+## Bonus: Table for Thinkpad B490/B590 BIOS 
 
 The B590 BIOS is similar to the one of Lx30, so here is the table for B590 
 BIOS, EC version H9EC09WW(1.02), which i.e. is included in BIOS H9ET92WW (untested!):
@@ -160,8 +160,22 @@ BIOS, EC version H9EC09WW(1.02), which i.e. is included in BIOS H9ET92WW (untest
 |         | BRfc 00028c1e           | 94 10            | SBITB $0x05,\*0x1(R3R2) | 52 73 01 00      | 12    | Set battery charging enable bit                    |
 |         |                         |                  | NOP NOP                 | 00 2c 00 2c      | 12    | Now go on to code where both bits were enabled     |
 
+## Bonus: Table for Thinkpad B480/B580/V480c/V590c BIOS 
 
-## Bonus: Table for Thinkpad E330 BIOS 
+The B480 BIOS is identical to B590, just at another offset, so here is the table for B480
+BIOS, EC version H1EC33WW(1.13), which i.e. is included in BIOS H1ET73WW (untested!):
+
+| Address | Old instruction         | Old instr. bytes | New instr.              | New instr. bytes | State | Comment                                            |
+| ------- | ----------------------- | ---------------- | ----------------------- | ---------------- | ----- | ---------------------------------------------------|
+| 28ab8   | BReq 00028ff0           | 00 18 38 05      | BR \*0x00028b0c         | e0 18 54 00      | 2     | Do not send battery auth challenge                 |
+| 28b24   | ORW 0x03, R0            | 30 26            | ORW 0x0C, R0            | c0 26            | 2     | Skip directly to state 12                          |
+| 28cae   | BRfs 00028ff0           | 80 18 42 03      | BR 00028d2c             | e0 18 7e 00      | 12    | Always execute step and do not go back to state 2  |
+| 28d44   | TBITB $0x06,\*0x1(R3R2) | 62 7b 01 00      | SBITB $0x06,\*0x1(R3R2) | 62 73 01 00      | 12    | Set battery authenticated bit                      |
+|         | BRfc 00028d50           | 94 10            | SBITB $0x05,\*0x1(R3R2) | 52 73 01 00      | 12    | Set battery charging enable bit                    |
+|         |                         |                  | NOP NOP                 | 00 2c 00 2c      | 12    | Now go on to code where both bits were enabled     |
+
+
+## Bonus: Table for Thinkpad E330,V480s BIOS 
 
 The E330 BIOS is similar to the one of Lx30, so here is the table for E330 (Lenovo V480s) 
 BIOS, EC version H3EC35WW(1.18), which i.e. is included in BIOS H3UJ79WW (untested!).

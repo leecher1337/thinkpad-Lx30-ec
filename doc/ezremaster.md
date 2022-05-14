@@ -40,6 +40,7 @@ mv CorePure64-11.1.iso Core-11.1.iso
 
 6) Next, build Tinycore release ISO:
 ```
+tce-load -wi syslinux
 cd ~/tinycore
 sh ./mkiso.sh
 ```

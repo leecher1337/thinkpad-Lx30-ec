@@ -270,10 +270,16 @@ thinkpadec() {
 #	hexpatchset E330 "bat" $1/$img.orig.extract/H3ET79WW/\$01H3000.FL1 $1/$exdir/
 #	tpecmkdone "$1" $img $exdir
 
-	local img=h9et92ww.exe
-	local exdir=b590.H9ET92WW.img.d
+#	local img=h9et92ww.exe
+#	local exdir=b590.H9ET92WW.img.d
+#	tpecmkinit "$1" $img $exdir
+#	hexpatchset B590 "bat" $1/$img.orig.extract/app/H9ET92WW.cap $1/$exdir/
+#	tpecmkdone "$1" $img $exdir
+
+	local img=h1uj53us.exe 
+	local exdir=b580.H1ET73WW.img.d
 	tpecmkinit "$1" $img $exdir
-	hexpatchset B590 "bat" $1/$img.orig.extract/app/H9ET92WW.cap $1/$exdir/
+	hexpatchset B580_H1EC33WW "bat" $1/$img.orig.extract/app/h1et73ww/\$0AH1000.FL1 $1/$exdir/
 	tpecmkdone "$1" $img $exdir
 }
 
@@ -354,8 +360,10 @@ mainmenu() {
 	while : ; do
 		model=`dialog --menu "Which Thinkpad model to patch?" 0 0 0 \
 			Lx30 "Thinkpad L430/L530" \
-			B590 "Thinkpad B590" \
-			E330 "Thinkpad E330" \
+			B580_H1EC33WW  "Thinkpad B480/B580/V480/V480x/V580/V580c (H1EC33WW)" \
+			B580_H5EC33WW  "Thinkpad B480/B580/V480/V480x/V580/V580c (H5EC33WW)" \
+			B590 "Thinkpad B490/B590" \
+			E330 "Thinkpad E330/V480s" \
 			3>&1 1>&2 2>&3`
 		case $? in
 		1)
