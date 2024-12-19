@@ -223,8 +223,8 @@ modprobe x2100_ec_sys write_support=1
 
 | Model      | Command
 |------------|-----------------------------------------------------------
-| B590, E330 | `echo -ne "\x0c\x60\x02" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x10082]`
-| Lx30       | `echo -ne "\x0c\x60\x02" | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x1004a]`
+| B590, E330 | `echo -ne "\x0c\x60\x02" \| dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x10082]`
+| Lx30       | `echo -ne "\x0c\x60\x02" \| dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x1004a]`
        
 
 Now battery should become ready and if not full start to charge.
