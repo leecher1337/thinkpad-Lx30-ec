@@ -194,6 +194,15 @@ patchdump() {
 	patfwfil "$1" "$2" "$3" 0
 }
 
+# Patch EC dump file directly
+patchecdump() {
+	# $1 Model
+	# $2 Patches
+	# $3 Dump File to patch
+	loadcfg "$1"
+	patfwfil "$1" "$2" "$3" $((-cfg_offs_rom_ec))
+}
+
 # Create Patchset for thinkpad-ec
 hexpatchset()
 {
@@ -394,7 +403,7 @@ if [ -z $1 ]; then
 	echo exitcheck.sh
 	echo
 else
-	if [ $1 = fl1 ] || [ $1 = patchdump ]; then
+	if [ $1 = fl1 ] || [ $1 = patchdump ] || [ $1 = patchecdump ]; then
 		if [ ! -z "$2" ] && [ ! -z "$3" ] && [ ! -z "$4" ]; then
 			$1 "$2" "$3" `realpath "$4"`
 			exit $?
@@ -404,12 +413,13 @@ else
 		thinkpadec "$2"
 		exit 0
 	fi
-	echo $0 \[thinkpadec\ \<dir\>] \[\[fl1\|patchdump\] \<model\> \<patches\> \<file\>\]
+	echo $0 \[thinkpadec\ \<dir\>] \[\[fl1\|patchdump|patchecdump\] \<model\> \<patches\> \<file\>\]
 	echo
 	echo Without arguments, calls interactive menu for live patching
 	echo "thinkpadec - Create Lx30 patchset for thinkpad_ec which is installed in <dir>"
 	echo "fl1        - Patches FL1 <file> with <patches> for <model>"
 	echo "patchdump  - Patches BIOS dump <file> with <patches> for <model>"
+	echo "patchecdump- Patches EC dump <file> with <patches> for <model>"
 	echo "             i.e.: $0 fl1 Lx30 \"kb bat\" \$01D4000.FL1"
 	echo 
 	echo
