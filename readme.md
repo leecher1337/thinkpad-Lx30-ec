@@ -172,16 +172,16 @@ Be careful not to cut into the board!
 
 ### Wiring
 
-Pin Chip | Name     | Pin RaspPi
----------|----------|------------
-1        | CS       | 24
-2        | MISO     | 21
-3        | WP       | not used
-4        | GND      | 25
-5        | MOSI     | 19
-6        | CLK      | 23
-7        | HOLD     | not used
-8        | VCC 3.3v | 17
+Pin Chip | Name     | Pin RaspPi | GPIO
+---------|----------|------------|-------
+1        | CS       | 24         | 8
+2        | MISO     | 21         | 9 MISO
+3        | WP       | not used   |
+4        | GND      | 25         | GND
+5        | MOSI     | 19         | 10 MOSI
+6        | CLK      | 23         | 11 SCLK
+7        | HOLD     | not used   |
+8        | VCC 3.3v | 17         | 3.3V
 
 WP and HOLD are not connected, because according to the board schematics, they
 are already connected to VCC via pull-up resistor onboard.
