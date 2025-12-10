@@ -85,7 +85,7 @@ Laptop                          | EC version
 --------------------------------|---------------------------------
 L430/L530                       | G3HT40WW(1.14)
 B480/B580/V480/V480c/V580/V580c | H1EC33WW(1.13) / H5EC33WW(1.13)
-B490/B590                       | H9EC09WW(1.02)
+B490/B590                       | H5EC33WW(1.14) / H9EC09WW(1.02)
 E330/V480s                      | H3EC35WW(1.18)
 E130/X130e/X131e                | Not supported, but see [here](https://github.com/leecher1337/thinkpad-Lx30-ec/issues/5)
 
