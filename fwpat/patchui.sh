@@ -291,6 +291,12 @@ thinkpadec() {
 #	hexpatchset B590_H5EC34WW "bat" $1/$img.orig.extract/app/H5ET85WW.cap $1/$exdir/
 #	tpecmkdone "$1" $img $exdir
 
+#	local img=h1et85ww.exe
+#	local exdir=b590.H1ET85WW.img.d
+#	tpecmkinit "$1" $img $exdir
+#	hexpatchset B590_H1EC34WW "bat" $1/$img.orig.extract/app/H1ET85WW.cap $1/$exdir/
+#	tpecmkdone "$1" $img $exdir
+
 	local img=h1uj53us.exe 
 	local exdir=b580.H1ET73WW.img.d
 	tpecmkinit "$1" $img $exdir
@@ -379,6 +385,7 @@ mainmenu() {
 			B580_H5EC33WW  "Thinkpad B480/B580/V480/V480x/V580/V580c (H5EC33WW)" \
 			B590 "Thinkpad B490/B590 (H9EC09WW)" \
 			B590_H5EC34WW  "Thinkpad B490/B590 (H5EC34WW)" \
+			B590_H1EC34WW  "Thinkpad B490/B590 (H1EC34WW)" \
 			E330 "Thinkpad E330/V480s" \
 			3>&1 1>&2 2>&3`
 		case $? in
