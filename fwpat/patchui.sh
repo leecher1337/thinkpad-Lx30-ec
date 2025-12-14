@@ -279,22 +279,22 @@ thinkpadec() {
 #	hexpatchset E330 "bat" $1/$img.orig.extract/H3ET79WW/\$01H3000.FL1 $1/$exdir/
 #	tpecmkdone "$1" $img $exdir
 
-#	local img=h9et92ww.exe
+#	local img=h9et92ww.zip
 #	local exdir=b590.H9ET92WW.img.d
 #	tpecmkinit "$1" $img $exdir
-#	hexpatchset B590 "bat" $1/$img.orig.extract/app/H9ET92WW.cap $1/$exdir/
+#	hexpatchset B590 "bat" $1/$img.orig.extract/DOS/H9ET92WW.cap $1/$exdir/
 #	tpecmkdone "$1" $img $exdir
 
-#	local img=h5et85ww.exe
+#	local img=h5et85ww.zip
 #	local exdir=b590.H5ET85WW.img.d
 #	tpecmkinit "$1" $img $exdir
-#	hexpatchset B590_H5EC34WW "bat" $1/$img.orig.extract/app/H5ET85WW.cap $1/$exdir/
+#	hexpatchset B590_H5EC34WW "bat" $1/$img.orig.extract/DOS/H5ET85WW.cap $1/$exdir/
 #	tpecmkdone "$1" $img $exdir
 
-#	local img=h1et85ww.exe
+#	local img=h1et85ww.zip
 #	local exdir=b590.H1ET85WW.img.d
 #	tpecmkinit "$1" $img $exdir
-#	hexpatchset B590_H1EC34WW "bat" $1/$img.orig.extract/app/H1ET85WW.cap $1/$exdir/
+#	hexpatchset B590_H1EC34WW "bat" $1/$img.orig.extract/DOS/H1ET85WW.cap $1/$exdir/
 #	tpecmkdone "$1" $img $exdir
 
 	local img=h1uj53us.exe 
